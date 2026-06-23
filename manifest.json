@@ -1,14 +1,11 @@
 {
-  "$schema": "schema/schema.json",
-  "id": "com.rk.demo",
-  "name": "Extension template",
-  "mainClass": "com.rk.demo.Main",
-  "version": "1.0.0",
-  "description": "A demo extension template project",
-  "author": {
-    "displayName": "Unknown"
-  },
-  "minAppVersion": 87,
-  "maxAppVersion": 87,
-  "repository": "https://github.com/Xed-Editor/Extension-Template"
+  id: com.genta.copilot,
+  name: AI Copilot,
+  mainClass: com.genta.copilot.Main,
+  version: 1.0.0,
+  description: Multi-AI copilot: Claude, OpenAI, Gemini, Groq, Mistral,
+  authors: [Genta-ta],
+  minAppVersion: 80,
+  targetAppVersion: 80,
+  repository: https://github.com/Genta-ta/xed-ai-copilot
 }
