@@ -1,0 +1,20 @@
+{
+  "allFiles": [
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/Ai-copilot/app/src/main/java/com/genta/copilot/Main.kt",
+      "selection": {
+        "end": {
+          "column": 0,
+          "index": 5082,
+          "line": 152
+        },
+        "start": {
+          "column": 0,
+          "index": 5082,
+          "line": 152
+        }
+      }
+    }
+  ],
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/Ai-copilot/app/src/main/java/com/genta/copilot/Main.kt"
+}

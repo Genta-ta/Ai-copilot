@@ -1,11 +1,11 @@
 {
-  id: com.genta.copilot,
-  name: AI Copilot,
-  mainClass: com.genta.copilot.Main,
-  version: 1.0.0,
-  description: Multi-AI copilot: Claude, OpenAI, Gemini, Groq, Mistral,
-  authors: [Genta-ta],
-  minAppVersion: 80,
-  targetAppVersion: 80,
-  repository: https://github.com/Genta-ta/xed-ai-copilot
+  "id": "com.genta.copilot",
+  "name": "AI Copilot",
+  "mainClass": "com.genta.copilot.Main",
+  "version": "1.0.0",
+  "description": "Multi-AI copilot: Claude, OpenAI, Gemini, Groq, Mistral",
+  "authors": ["Genta-ta"],
+  "minAppVersion": 80,
+  "targetAppVersion": 80,
+  "repository": "https://github.com/Genta-ta/xed-ai-copilot"
 }

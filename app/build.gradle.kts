@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.rk.demo"
-    compileSdk = 37
+    namespace = "com.genta.copilot"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.rk.demo"
+        applicationId = "com.genta.copilot"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -22,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            // If you plan to enable ProGuard, then make sure to add @Keep on the main class. Otherwise, Xed-Editor won't be able to find it.
+            // Jika ingin mengaktifkan ProGuard, pastikan tambahkan @Keep pada main class agar Xed-Editor bisa menemukannya.
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -31,23 +31,20 @@ android {
         }
     }
     compileOptions {
-        // Should match with Xed-Editor
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlin { jvmToolchain(21) }
+    kotlin { jvmToolchain(17) }
     buildFeatures {
         compose = true
     }
 }
 
-
-// Always try to match the versions of library to the versions used in Xed-Editor
+// Dependensi disesuaikan dengan versi yang digunakan di Xed-Editor
 dependencies {
-    // Xed-Editor extension SDK, required to interact with the application, do NOT remove
+    // SDK Ekstensi Xed-Editor, wajib ada untuk interaksi antar aplikasi
     compileOnly(files("libs/sdk.jar"))
 
-    // If a library is used in Xed-Editor and your extension is common, then you should use compileOnly. Otherwise, it slows down the app.
     compileOnly(libs.androidx.appcompat)
     compileOnly(libs.material)
     compileOnly(libs.androidx.constraintlayout)
@@ -55,7 +52,6 @@ dependencies {
     compileOnly(libs.androidx.navigation.ui)
     compileOnly(libs.androidx.navigation.fragment.ktx)
     compileOnly(libs.androidx.navigation.ui.ktx)
-    compileOnly(libs.androidx.activity)
     compileOnly(libs.androidx.lifecycle.viewmodel)
     compileOnly(libs.androidx.lifecycle.runtime)
     compileOnly(libs.androidx.activity.compose)
@@ -84,9 +80,10 @@ dependencies {
     compileOnly(libs.pine.core)
     compileOnly(libs.androidx.lifecycle.process)
     compileOnly(libs.androidsvg.aar)
+    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 }
 
-//  ---------------- below is the code for automatically updating the sdk.jar --------------------
+//  ---------------- Otomatisasi Pembaruan sdk.jar --------------------
 
 val GITHUB_OWNER = "Xed-Editor"
 val GITHUB_REPO = "Xed-Editor"
@@ -94,15 +91,14 @@ val TAG_NAME = "sdk-latest"
 val ASSET_NAME = "sdk.jar"
 
 val API_URL = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO/releases/tags/$TAG_NAME"
-val DOWNLOAD_URL =
-    "https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/download/$TAG_NAME/$ASSET_NAME"
+val DOWNLOAD_URL = "https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/download/$TAG_NAME/$ASSET_NAME"
 
 val timestampFile = project.layout.buildDirectory.file("sdk_updated_at.txt")
 val outputFile = project.layout.projectDirectory.file("libs/$ASSET_NAME")
 
 tasks.register<DefaultTask>("downloadLatestJar") {
     outputs.upToDateWhen { false }
-    description = "Checks and downloads the latest $ASSET_NAME from GitHub."
+    description = "Memeriksa dan mengunduh $ASSET_NAME terbaru dari GitHub."
     group = "build"
 
     outputs.file(outputFile)
@@ -115,11 +111,11 @@ tasks.register<DefaultTask>("downloadLatestJar") {
         val remoteUpdatedAt: String
         try {
             val json = URL(API_URL).readText()
-            val releaseMap = Gson().fromJson(json, Map::class.java) as Map<String, Any>
-            remoteUpdatedAt = releaseMap["updated_at"] as String
+            val releaseObj = Gson().fromJson(json, JsonObject::class.java)
+            remoteUpdatedAt = releaseObj.get("updated_at").asString
         } catch (e: Exception) {
-            logger.error("Failed to fetch GitHub API at $API_URL", e)
-            throw GradleException("Could not check latest release timestamp.", e)
+            logger.error("Gagal mengakses GitHub API di $API_URL", e)
+            throw GradleException("Tidak dapat memeriksa timestamp release terbaru.", e)
         }
 
         val storedUpdatedAt = if (timestampFile.get().asFile.exists()) {
@@ -129,11 +125,11 @@ tasks.register<DefaultTask>("downloadLatestJar") {
         }
 
         if (remoteUpdatedAt == storedUpdatedAt) {
-            println("✅ $ASSET_NAME is up to date (Timestamp: $remoteUpdatedAt). Skipping download.")
+            println("✅ $ASSET_NAME sudah versi terbaru (Timestamp: $remoteUpdatedAt). Unduhan dilewati.")
             return@doLast
         }
 
-        println("Release updated ($storedUpdatedAt -> $remoteUpdatedAt). Downloading new JAR...")
+        println("Release diperbarui ($storedUpdatedAt -> $remoteUpdatedAt). Mengunduh JAR baru...")
 
         try {
             URL(DOWNLOAD_URL).openStream().use { inputStream ->
@@ -142,16 +138,16 @@ tasks.register<DefaultTask>("downloadLatestJar") {
                 }
             }
             timestampFile.get().asFile.writeText(remoteUpdatedAt)
-            println("Successfully downloaded $ASSET_NAME to ${outputFile.asFile.path}")
+            println("Berhasil mengunduh $ASSET_NAME ke ${outputFile.asFile.path}")
         } catch (e: Exception) {
-            logger.error("Failed to download JAR from $DOWNLOAD_URL", e)
-            throw GradleException("Download failed.", e)
+            logger.error("Gagal mengunduh JAR dari $DOWNLOAD_URL", e)
+            throw GradleException("Proses unduh gagal.", e)
         }
     }
 }
 
 tasks.register<Delete>("cleanApkOutputs") {
-    description = "Clears all generated files and subdirectories from the build/outputs/apk folder."
+    description = "Menghapus semua file hasil build dan subdirektori di dalam folder build/outputs/apk."
     group = "cleanup"
     delete(layout.buildDirectory.dir("outputs/apk"))
 }
@@ -161,53 +157,55 @@ tasks.named("preBuild").configure {
     dependsOn("downloadLatestJar")
 }
 
-// --------------- generate the final zip file -----------------
+// --------------- Pembuatan Dokumen Akhir ZIP -----------------
 
 tasks.register<Zip>("createFinalZip") {
+    // Alur wajib: Buat file APK kompilasi terlebih dahulu sebelum dibungkus ke ZIP
+    dependsOn("assembleRelease")
+
     outputs.upToDateWhen { false }
-    description = "Archives the generated APK files into a single ZIP file."
+    description = "Membungkus file APK yang dihasilkan beserta komponen lainnya ke dalam satu file ZIP."
     group = "build"
 
-    val apkFiles = layout.buildDirectory
-        .dir("outputs/apk")
-        .get()
-        .asFile
-        .walk()
-        .filter { it.extension == "apk" }
-        .toList()
-
-    if (apkFiles.size > 1) {
-        throw GradleException("multiple apk files detected, this build system canot handle multiple apk files")
-    }
-
-    if (apkFiles.isEmpty()) {
-        throw GradleException("No apk files found, run ./gradlew assembleRelease first")
-    }
-
-    val apk = apkFiles.first()
     val manifest = File(rootDir, "manifest.json")
-
-    val manifestJson: JsonObject by lazy {
-        val text = manifest.readText()
-        Gson().fromJson(text, JsonObject::class.java)
-    }
-
-    val extensionName: String by lazy {
-        manifestJson.get("name").asString
-    }
-
     val iconFile = File(rootDir, "icon.png")
     val readmeFile = File(rootDir, "README.md")
     val changelogFile = File(rootDir, "CHANGELOG.md")
 
-    archiveFileName.set("$extensionName.zip")
+    // Membaca nama ekstensi secara aman saat configuration time
+    val extensionName = providers.provider {
+        if (manifest.exists()) {
+            val text = manifest.readText()
+            Gson().fromJson(text, JsonObject::class.java).get("name").asString
+        } else {
+            "extension"
+        }
+    }
+    archiveFileName.set(extensionName.map { "$it.zip" })
+    destinationDirectory.set(File(rootDir, "output"))
 
-    from(apk) { into("") }
+    // Memasukkan berkas manifest dan info ke root ZIP
     from(manifest) { into("") }
     from(iconFile) { into("") }
     from(readmeFile) { into("") }
     from(changelogFile) { into("") }
 
-    destinationDirectory.set(File(rootDir, "output"))
-}
+    // Mengambil APK secara dinamis setelah build selesai agar tidak error "File tidak ditemukan"
+    from(layout.buildDirectory.dir("outputs/apk/release")) {
+        include("**/*.apk")
+        eachFile {
+            // Memastikan file APK ditaruh di root dalam ZIP, bukan di dalam folder terpisah
+            path = name 
+        }
+    }
 
+    // Validasi akhir untuk memastikan zip sukses dibuat
+    doLast {
+        val zipFile = archiveFile.get().asFile
+        if (zipFile.exists()) {
+            println("🎉 Berhasil! Modul ZIP siap di: ${zipFile.absolutePath}")
+        } else {
+            throw GradleException("Gagal membuat file ZIP ekstensi.")
+        }
+    }
+}

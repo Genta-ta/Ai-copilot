@@ -17,14 +17,16 @@ import com.rk.extension.ExtensionContext
 
 @Keep
 @Suppress("unused")
-class Main(context: ExtensionContext) : ExtensionAPI(context) {
+// Ubah nama parameter konstruktor menjadi extContext agar bebas dari bentrokan
+class Main(private val extContext: ExtensionContext) : ExtensionAPI(extContext) {
 
     private var floatingView: View? = null
 
-    // ambil provider sekarang dari settings
+    // Ambil provider sekarang dari settings
     private fun currentProvider(): AiProvider? {
-        val name = context.settings.getString("active_provider", "Claude")
-        val key = context.settings.getString("api_key_$name", "")
+        val name: String = extContext.settings.getString("active_provider", "Claude") ?: "Claude"
+        val key: String = extContext.settings.getString("api_key_$name", "") ?: ""
+        
         if (key.isBlank()) return null
         return try {
             ProviderFactory.create(name, key)
@@ -33,17 +35,51 @@ class Main(context: ExtensionContext) : ExtensionAPI(context) {
         }
     }
 
+    // ==========================================
+    // FUNGSI SIKLUS HIDUP EKSTENSI
+    // ==========================================
+
     override fun onExtensionLoaded() {
-        context.logInfo("AI Copilot loaded")
+        extContext.logInfo("AI Copilot loaded")
     }
 
-    override fun afterActivityCreated(activity: Activity) {
+    override fun onInstalled() {
+        // Kosongkan jika tidak ada logika khusus
+    }
+
+    override fun onUpdated() {
+        // Kosongkan jika tidak ada logika khusus
+    }
+
+    override fun onUninstalled() {
+        // Kosongkan jika tidak ada logika khusus
+    }
+
+    // ==========================================
+    // FUNGSI SIKLUS HIDUP ACTIVITY
+    // ==========================================
+
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         injectFloatingButtons(activity)
     }
+
+    override fun onActivityStarted(activity: Activity) {}
+
+    override fun onActivityResumed(activity: Activity) {}
+
+    override fun onActivityPaused(activity: Activity) {}
+
+    override fun onActivityStopped(activity: Activity) {}
+
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
 
     override fun onActivityDestroyed(activity: Activity) {
         floatingView = null
     }
+
+    // ==========================================
+    // LOGIKA INJEKSI TOMBOL FLOATING
+    // ==========================================
 
     private fun injectFloatingButtons(activity: Activity) {
         val rootView = activity.window.decorView
@@ -73,8 +109,8 @@ class Main(context: ExtensionContext) : ExtensionAPI(context) {
             setOnClickListener {
                 showSettingsDialog(
                     activity = activity,
-                    getStr = { key, def -> context.settings.getString(key, def) },
-                    putStr = { key, value -> context.settings.putString(key, value) }
+                    getStr = { key, def -> extContext.settings.getString(key, def) ?: def },
+                    putStr = { key, value -> extContext.settings.putString(key, value) }
                 )
             }
         }
@@ -98,7 +134,7 @@ class Main(context: ExtensionContext) : ExtensionAPI(context) {
                 }
                 showCopilotDialog(
                     activity = activity,
-                    scope = context.scope,
+                    scope = extContext.scope, // Memakai extContext yang aman
                     getProvider = { currentProvider() }
                 )
             }
